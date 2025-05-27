@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: legislation
+      POSTGRES_PASSWORD: legislation
+      POSTGRES_DB: legislation
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  qdrant:
+    image: qdrant/qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  pipeline:
+    build: .
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=legislation
+      - POSTGRES_PASSWORD=legislation
+      - POSTGRES_DB=legislation
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - LEGISLATION_CATEGORY=${LEGISLATION_CATEGORY:-planning}
+      - START_DATE=${START_DATE:-2024-08-01}
+      - END_DATE=${END_DATE:-2024-08-31}
+    depends_on:
+      - postgres
+      - qdrant
+
+volumes:
+  postgres_data:
+  qdrant_data:
